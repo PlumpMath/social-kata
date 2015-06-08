@@ -2,7 +2,13 @@
 
 (defn publish
   [state user msg]
-  (update-in state [user] conj msg))
+  (update-in state [user] conj
+             {:mentions (extract-mentions msg)
+              :message  msg}))
+
+(defn extract-mentions
+  [message]
+  (into #{} (map second (re-seq #"@(\w*)" message))))
 
 (defn view
   [state user]
@@ -16,5 +22,5 @@
   [state user]
   (let [subs (get-in state [user :subscriptions])]
     (for [author subs
-          message (view state author)]
+          {:keys [message author]} (view state author)]
       {:author author :message message})))
