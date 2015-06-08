@@ -18,7 +18,14 @@
              (view state-b "Alice"))))))
 
 (deftest subscribe-test
-  (testing "Charlie can subscribe to Alice's timeline"
-    (let [state {"Charlie" {:timeline [] :subscriptions []}}]
+  (let [state {"Charlie" {:timeline [] :subscriptions []}}
+        state-a {"Charlie" {:timeline [] :subscriptions []}
+               "Alice" {:timeline ["A message"] :subscriptions []}}]
+    (testing "Charlie can subscribe to Alice's timeline"
       (is (= (update-in state ["Charlie" :subscriptions] conj "Alice")
-            (subscribe state "Charlie" "Alice"))))))
+             (subscribe state "Charlie" "Alice"))))
+    (testing "Charlie sees alice's timeline"
+      (is (= []
+             (feed state "Charlie")))
+      (is (= []
+             (feed state-a "Charlie"))))))
