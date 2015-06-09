@@ -4,53 +4,64 @@
 
 (deftest a-test
   (testing "Alice can publish to a personal timeline"
-    (is (= {"Alice" [{:message "Hello world." :mentions #{}}]}
-           (publish {} "Alice" "Hello world.")))))
+    (is (= {"alice" [{:message "hello world." :mentions #{}}]}
+           (publish {} "alice" "hello world.")))))
 
 (deftest reading-test
-  (testing "Bob can view Alice's timeline"
+  (testing "bob can view alice's timeline"
     (let [state-a {}
-          state-b {"Alice" {:timeline ["A message"]}}]
+          state-b {"alice" {:timeline ["a message"]}}]
       (is (= []
-             (view state-a "Alice")))
+             (view state-a "alice")))
 
-      (is (= ["A message"]
-             (view state-b "Alice"))))))
+      (is (= ["a message"]
+             (view state-b "alice"))))))
 
 (deftest subscribe-test
-  (let [state {"Charlie" {:timeline [] :subscriptions []}}
-        state-a {"Charlie" {:timeline [] :subscriptions ["Alice"]}
-                 "Alice" {:timeline [{:author "Alice" :message "A message"}] :subscriptions []}}
-        state-b {"Charlie" {:timeline [] :subscriptions ["Alice" "Bob"]}
-                 "Alice" {:timeline [{:author "Alice" :message
-                                      "A message"}] :subscriptions []}
-                 "Bob" {:timeline [{:message "Bob's msg1"
-                                    :author "Bob"}
-                                   {:message "Bob's msg2"
-                                    :author "Bob"}]}}]
+  (let [state {"charlie" {:timeline [] :subscriptions []}}
+        state-a {"charlie" {:timeline [] :subscriptions ["alice"]}
+                 "alice" {:timeline [{:author "alice" :message "a message"}] :subscriptions []}}
+        state-b {"charlie" {:timeline [] :subscriptions ["alice" "bob"]}
+                 "alice" {:timeline [{:author "alice" :message
+                                      "a message"}] :subscriptions []}
+                 "bob" {:timeline [{:message "bob's msg1"
+                                    :author "bob"}
+                                   {:message "bob's msg2"
+                                    :author "bob"}]}}]
     (testing "charlie can subscribe to alice's timeline"
       (is (= (update-in state ["charlie" :subscriptions] conj "alice")
              (subscribe state "charlie" "alice"))))
     (testing "charlie sees alice's timeline"
       (is (= []
-             (feed state "Charlie")))
-      (is (= [{:author "Alice" :message "A message"}]
-             (feed state-a "Charlie"))))
-    (testing "Charlie can subscribe to Alice and Bob's timeline"
-      (is (= (assoc-in state ["Charlie" :subscriptions] ["Alice" "Bob"])
+             (feed state "charlie")))
+      (is (= [{:author "alice" :message "a message"}]
+             (feed state-a "charlie"))))
+    (testing "charlie can subscribe to alice and bob's timeline"
+      (is (= (assoc-in state ["charlie" :subscriptions] ["alice" "bob"])
              (-> state
-                 (subscribe "Charlie" "Alice")
-                 (subscribe "Charlie" "Bob"))))
-      (is (= [{:author "Alice" :message "A message"}
-              {:author "Bob" :message "Bob's msg1"}
-              {:author "Bob" :message "Bob's msg2"}]
-             (feed state-b "Charlie"))))))
+                 (subscribe "charlie" "alice")
+                 (subscribe "charlie" "bob"))))
+      (is (= [{:author "alice" :message "a message"}
+              {:author "bob" :message "bob's msg1"}
+              {:author "bob" :message "bob's msg2"}]
+             (feed state-b "charlie"))))))
 
 (deftest extract-mentions-test
-  "Test mentions are parsed from message"
-  (let [message "Hello @Chris"]
-    (is (= #{"Chris"}
+  "test mentions are parsed from message"
+  (let [message "hello @chris"]
+    (is (= #{"chris"}
            (extract-mentions message))))
-  (let [message "Hello @Chris, @Thomas and another @Chris"]
-    (is (= #{"Chris" "Thomas"}
+  (let [message "hello @chris, @thomas and another @chris"]
+    (is (= #{"chris" "thomas"}
            (extract-mentions message)))))
+
+(deftest mentions-in-message-test
+  "test mentions in message"
+  (let [message "this message mentions @chris, @agile_geek, @thomas and @jr0cket"
+        state {"Alice"
+               {:timeline [{:author "Alice" :message message}]
+                :mentions #{}
+                :subscriptions []}}]
+    (is (= #{"chris" "agile_geek" "thomas" "jr0cket"}
+           (-> (publish state "Alice" message)
+               (get-in ["Alice" :mentions]))))))
