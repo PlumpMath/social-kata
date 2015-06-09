@@ -28,10 +28,10 @@
                                     :author "Bob"}
                                    {:message "Bob's msg2"
                                     :author "Bob"}]}}]
-    (testing "Charlie can subscribe to Alice's timeline"
-      (is (= (update-in state ["Charlie" :subscriptions] conj "Alice")
-             (subscribe state "Charlie" "Alice"))))
-    (testing "Charlie sees alice's timeline"
+    (testing "charlie can subscribe to alice's timeline"
+      (is (= (update-in state ["charlie" :subscriptions] conj "alice")
+             (subscribe state "charlie" "alice"))))
+    (testing "charlie sees alice's timeline"
       (is (= []
              (feed state "Charlie")))
       (is (= [{:author "Alice" :message "A message"}]
@@ -47,6 +47,10 @@
              (feed state-b "Charlie"))))))
 
 (deftest extract-mentions-test
+  "Test mentions are parsed from message"
   (let [message "Hello @Chris"]
     (is (= #{"Chris"}
+           (extract-mentions message))))
+  (let [message "Hello @Chris, @Thomas and another @Chris"]
+    (is (= #{"Chris" "Thomas"}
            (extract-mentions message)))))
