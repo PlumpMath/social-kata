@@ -18,12 +18,12 @@
              (view state-b "alice"))))))
 
 (deftest subscribe-test
-  (let [state {"charlie" {:timeline [] :subscriptions []}}
-        state-a {"charlie" {:timeline [] :subscriptions ["alice"]}
+  (let [state {"charlie" {:timeline [] :subscriptions #{}}}
+        state-a {"charlie" {:timeline [] :subscriptions #{"alice"}}
                  "alice" {:timeline [{:author "alice" :message "a message"}] :subscriptions []}}
-        state-b {"charlie" {:timeline [] :subscriptions ["alice" "bob"]}
+        state-b {"charlie" {:timeline [] :subscriptions #{"alice" "bob"}}
                  "alice" {:timeline [{:author "alice" :message
-                                      "a message"}] :subscriptions []}
+                                      "a message"}] :subscriptions #{}}
                  "bob" {:timeline [{:message "bob's msg1"
                                     :author "bob"}
                                    {:message "bob's msg2"
@@ -37,13 +37,13 @@
       (is (= [{:author "alice" :message "a message"}]
              (feed state-a "charlie"))))
     (testing "charlie can subscribe to alice and bob's timeline"
-      (is (= (assoc-in state ["charlie" :subscriptions] ["alice" "bob"])
+      (is (= (assoc-in state ["charlie" :subscriptions] #{"alice" "bob"})
              (-> state
                  (subscribe "charlie" "alice")
                  (subscribe "charlie" "bob"))))
-      (is (= [{:author "alice" :message "a message"}
-              {:author "bob" :message "bob's msg1"}
-              {:author "bob" :message "bob's msg2"}]
+      (is (= [{:author "bob" :message "bob's msg1"}
+              {:author "bob" :message "bob's msg2"}
+              {:author "alice" :message "a message"}]
              (feed state-b "charlie"))))))
 
 (deftest extract-mentions-test
@@ -59,7 +59,7 @@
   "test mentions in message"
   (let [message "this message mentions @chris, @agile_geek, @thomas and @jr0cket"
         state {"Alice"
-               {:timeline [{:author "Alice" :message message}]
+               {:timeline [{:author "Alice" :message []}]
                 :mentions #{}
                 :subscriptions []}}]
     (is (= #{"chris" "agile_geek" "thomas" "jr0cket"}

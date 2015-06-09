@@ -21,6 +21,7 @@
 (defn feed
   [state user]
   (let [subs (get-in state [user :subscriptions])]
-    (for [author subs
-          {:keys [message author]} (view state author)]
-      {:author author :message message})))
+    (vec
+     (for [subscribee subs
+            {:keys [message author]} (view state subscribee)]
+        {:author author :message message}))))
