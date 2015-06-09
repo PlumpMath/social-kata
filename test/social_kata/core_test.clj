@@ -10,17 +10,19 @@
 (deftest reading-test
   (testing "bob can view alice's timeline"
     (let [state-a {}
-          state-b {"alice" {:timeline ["a message"]}}]
+          state-b {"alice" {:timeline [{:message "a message"
+                                        :author "alice"}]}}]
       (is (= []
              (view state-a "alice")))
 
-      (is (= ["a message"]
+      (is (= [{:message "a message"
+               :author "alice"}]
              (view state-b "alice"))))))
 
 (deftest subscribe-test
   (let [state {"charlie" {:timeline [] :subscriptions #{}}}
         state-a {"charlie" {:timeline [] :subscriptions #{"alice"}}
-                 "alice" {:timeline [{:author "alice" :message "a message"}] :subscriptions []}}
+                 "alice" {:timeline [{:author "alice" :message "a message"}] :subscriptions #{}}}
         state-b {"charlie" {:timeline [] :subscriptions #{"alice" "bob"}}
                  "alice" {:timeline [{:author "alice" :message
                                       "a message"}] :subscriptions #{}}
@@ -59,9 +61,9 @@
   "test mentions in message"
   (let [message "this message mentions @chris, @agile_geek, @thomas and @jr0cket"
         state {"Alice"
-               {:timeline [{:author "Alice" :message []}]
+               {:timeline [{:author "Alice" :message "message"}]
                 :mentions #{}
-                :subscriptions []}}]
+                :subscriptions #{}}}]
     (is (= #{"chris" "agile_geek" "thomas" "jr0cket"}
            (-> (publish state "Alice" message)
                (get-in ["Alice" :mentions]))))))
