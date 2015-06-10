@@ -67,3 +67,23 @@
     (is (= #{"chris" "agile_geek" "thomas" "jr0cket"}
            (-> (publish state "Alice" message)
                (get-in ["Alice" :mentions]))))))
+
+(deftest view-timeline-including-follows-test
+  "View a users timeline including the timelines they follow"
+  (let [state {"Alice"
+               {:timeline [{:author "Alice" :message "Hello from Alice"}
+                           {:author "Alice" :message "Another message from Alice"}
+                           {:author "Alice" :message "I am drinking coffee."}]
+                :subscriptions #{"Bob" "Charlie"}}
+               "Bob"
+               {:timeline [{:author "Bob" :message "This is Bob's first post"}
+                           {:author "Bob" :message "This is Bob's second post"}]}
+               "Charlie"
+               {:timeline [{:author "Charlie" :message "Hello from the Clojure Dojo"}]}}]
+    (is (= (view-all "Alice")
+           [{:author "Alice" :message "Hello from Alice"}
+            {:author "Alice" :message "Another message from Alice"}
+            {:author "Alice" :message "I am drinking coffee."}
+            {:author "Bob" :message "This is Bob's first post"}
+            {:author "Bob" :message "This is Bob's second post"}
+            {:author "Charlie" :message "Hello from the Clojure Dojo"}]))))

@@ -24,6 +24,13 @@
   (s/validate state-of-world-schema state)
   (get-in state [user :timeline] []))
 
+(defn view-all
+  "View all of a users timeline including all follows (timelines subscribed to)"
+  [state user]
+  (s/validate state-of-world-schema state)
+  (into (view state user)
+        (feed state user)))
+
 (defn subscribe
   [state user subscription]
   (s/validate state-of-world-schema state)
