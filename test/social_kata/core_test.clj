@@ -80,10 +80,11 @@
                            {:author "Bob" :message "This is Bob's second post"}]}
                "Charlie"
                {:timeline [{:author "Charlie" :message "Hello from the Clojure Dojo"}]}}]
-    (is (= (view-all "Alice")
+    (is (= (view-all state "Alice")
            [{:author "Alice" :message "Hello from Alice"}
             {:author "Alice" :message "Another message from Alice"}
             {:author "Alice" :message "I am drinking coffee."}
+            {:author "Charlie" :message "Hello from the Clojure Dojo"}
             {:author "Bob" :message "This is Bob's first post"}
             {:author "Bob" :message "This is Bob's second post"}
-            {:author "Charlie" :message "Hello from the Clojure Dojo"}]))))
+            ]))))

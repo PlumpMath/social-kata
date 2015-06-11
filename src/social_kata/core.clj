@@ -8,28 +8,20 @@
     (s/optional-key :mentions) #{s/Str}
     (s/optional-key :subscriptions) #{s/Str}}})
 
+(defn extract-mentions
+  [message]
+  (into #{} (map second (re-seq #"@(\w*)" message))))
+
 (defn publish
   [state user msg]
   (s/validate state-of-world-schema state)
   (update-in state [user] conj
              {:mentions (extract-mentions msg)
               :message  msg}))
-
-(defn extract-mentions
-  [message]
-  (into #{} (map second (re-seq #"@(\w*)" message))))
-
 (defn view
   [state user]
   (s/validate state-of-world-schema state)
   (get-in state [user :timeline] []))
-
-(defn view-all
-  "View all of a users timeline including all follows (timelines subscribed to)"
-  [state user]
-  (s/validate state-of-world-schema state)
-  (into (view state user)
-        (feed state user)))
 
 (defn subscribe
   [state user subscription]
@@ -44,3 +36,10 @@
      (for [subscribee subs
             {:keys [message author]} (view state subscribee)]
         {:author author :message message}))))
+
+(defn view-all
+  "View all of a users timeline including all follows (timelines subscribed to)"
+  [state user]
+  (s/validate state-of-world-schema state)
+  (into (view state user)
+        (feed state user)))
