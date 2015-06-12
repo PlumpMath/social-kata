@@ -1,5 +1,6 @@
 (ns social-kata.core
-  (:require [schema.core :as s])
+  (:require [schema.core :as s]
+            [clj-time.core :as t])
   (:import [org.joda.time DateTime]))
 
 (def state-of-world-schema
@@ -23,7 +24,9 @@
 (defn view
   [state user]
   (s/validate state-of-world-schema state)
-  (get-in state [user :timeline] []))
+  (->>
+   (get-in state [user :timeline] [])
+   (sort-by :timestamp t/after?)))
 
 (defn subscribe
   [state user subscription]
@@ -35,13 +38,17 @@
   (s/validate state-of-world-schema state)
   (let [subs (get-in state [user :subscriptions])]
     (vec
-     (for [subscribee subs
-            {:keys [message author]} (view state subscribee)]
-        {:author author :message message}))))
+     (sort-by :timestamp t/after?
+      (for [subscribee subs
+            {:keys [message author timestamp]} (view state subscribee)]
+        {:author author :message message :timestamp timestamp})))))
 
 (defn view-all
   "View all of a users timeline including all follows (timelines subscribed to)"
   [state user]
   (s/validate state-of-world-schema state)
-  (into (view state user)
-        (feed state user)))
+  (->>
+   (into (view state user)
+         (feed state user))
+   (sort-by :timestamp t/after?)
+   vec))

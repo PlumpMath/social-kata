@@ -105,11 +105,11 @@
                            {:author "Bob" :message "This is Bob's first post" :timestamp jan-10-2015}]}
                "Charlie"
                {:timeline [{:author "Charlie" :message "Hello from the Clojure Dojo" :timestamp jan-31-2015}]}}]
-    (is (= (view-all state "Alice")
+    (is (=
            [{:author "Alice" :message "Hello from Alice" :timestamp time-now}
             {:author "Bob" :message "This is Bob's second post" :timestamp feb-5-2015}
             {:author "Alice" :message "Another message from Alice" :timestamp feb-1-2015}
             {:author "Charlie" :message "Hello from the Clojure Dojo" :timestamp jan-31-2015}
-            {:author "Bob" :message "This is Bob's second post" :timestamp feb-5-2015}
             {:author "Bob" :message "This is Bob's first post" :timestamp jan-10-2015}
-            {:author "Alice" :message "I am drinking coffee." :timestamp jan-1-2015}]))))
+            {:author "Alice" :message "I am drinking coffee." :timestamp jan-1-2015}]
+           (view-all state "Alice")))))
