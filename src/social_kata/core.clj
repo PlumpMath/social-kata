@@ -11,6 +11,41 @@
     (s/optional-key :mentions) #{s/Str}
     (s/optional-key :subscriptions) #{s/Str}}})
 
+(s/defrecord TimelineEntry
+    [message :- s/Str
+     author :- s/Str
+     timestamp :- s/Str])
+
+(s/defrecord User
+  [username :- s/Str
+   timeline :- [[TimelineEntry]]
+   mentions :- clojure.lang.APersistentSet
+   subscriptions :- clojure.lang.APersistentSet])
+
+(defn new-User
+  ([username
+    timeline]
+   (new-User username timeline #{} #{}))
+  ([username
+    timeline
+    mentions]
+   (new-User username timeline mentions #{}))
+  ([username
+    timeline
+    mentions
+    subscriptions]
+   (->User username timeline mentions subscriptions))
+  ([{:keys [username timeline mentions subscriptions] :or {mentions #{} subscriptions #{}}}]
+   (->User username timeline mentions subscriptions))
+  )
+
+
+
+(s/defrecord World
+    [users :- [[User]]])
+
+
+
 (defn extract-mentions
   [message]
   (into #{} (map second (re-seq #"@(\w*)" message))))
@@ -52,3 +87,9 @@
          (feed state user))
    (sort-by :timestamp t/after?)
    vec))
+
+
+(comment
+  (new-User "Chris" [(->TimelineEntry "message" "Chris" (t/now))])
+
+  (new-User {:username "Chris" :timeline [(->TimelineEntry "Chris" "message" (t/now))] :subscriptions #{"Fred"}}))
