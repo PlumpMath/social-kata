@@ -1,10 +1,12 @@
 (ns social-kata.core
-  (:require [schema.core :as s]))
+  (:require [schema.core :as s])
+  (:import [org.joda.time DateTime]))
 
 (def state-of-world-schema
   {s/Str
    {:timeline [{:message s/Str
-                :author s/Str}]
+                :author s/Str
+                :timestamp org.joda.time.DateTime}]
     (s/optional-key :mentions) #{s/Str}
     (s/optional-key :subscriptions) #{s/Str}}})
 
