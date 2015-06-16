@@ -3,10 +3,23 @@
             [social-kata.core :refer :all]
             [clj-time.core :as t]))
 
-(deftest a-test
+(deftest publish-test
   (testing "Alice can publish to a personal timeline"
     (is (= {"alice" [{:message "hello world." :mentions #{}}]}
            (publish {} "alice" "hello world.")))))
+
+(deftest publish-rec-test
+  (testing "Alice can publish to a personal timeline"
+    (let [time-before (t/now)
+          username "alice"
+          msg "hello world."
+          state (publish-rec (new-world []) username msg)]
+      (is (= (list username) (keys state)))
+      (is (= username (get-in state [username :username])))
+      (is (= username (get-in state [username :timeline 0 :author])))
+      (is (= msg (get-in state [username :timeline 0 :message])))
+      (is (t/within? (t/interval time-before (t/now))
+                     (get-in state [username :timeline 0 :timestamp]))))))
 
 (deftest reading-test
   (testing "bob can view alice's timeline"
@@ -22,6 +35,21 @@
                :author "alice"
                :timestamp time-now}]
              (view state-b "alice"))))))
+
+(deftest reading-rec-test
+  (testing "bob can view alice's timeline"
+    (let [state-a {}
+          time-now (t/now)
+          timeline-entry (->TimelineEntry
+                          "a message"
+                          "alice"
+                          (t/now))
+          state-b (new-world [(new-user "alice" timeline-entry)])]
+      (is (= []
+             (view-rec state-a "alice")))
+
+      (is (= [timeline-entry]
+             (view-rec state-b "alice"))))))
 
 (deftest subscribe-test
   (let [state {"charlie" {:timeline [] :subscriptions #{}}}
@@ -62,6 +90,47 @@
               {:author "bob" :message "bob's msg2" :timestamp feb-1-2015}
               {:author "bob" :message "bob's msg1" :timestamp jan-1-2015}]
              (feed state-b "charlie"))))))
+
+(deftest subscribe-rec-test
+  (let [state
+        (new-world [(new-user "charlie")])
+        time-now (t/now)
+        state-a {"charlie" {:timeline [] :subscriptions #{"alice"}}
+                 "alice" {:timeline [{:author "alice" :message "a message" :timestamp time-now}] :subscriptions #{}}}
+        jan-1-2015 (t/date-time 2015 01 01)
+        feb-1-2015 (t/date-time 2015 02 01)
+        state-b {"charlie" {:timeline [] :subscriptions #{"alice" "bob"}}
+                 "alice" {:timeline [{:author "alice"
+                                      :message "a message"
+                                      :timestamp time-now}] :subscriptions #{}}
+                 "bob" {:timeline [{:message "bob's msg2"
+                                    :author "bob"
+                                    :timestamp feb-1-2015}
+                                   {:message "bob's msg1"
+                                    :author "bob"
+                                    :timestamp jan-1-2015}
+                                   ]}}]
+    (testing "charlie can subscribe to alice's timeline"
+      (is (= (update-in state ["charlie" :subscriptions] conj "alice")
+             (subscribe-rec state "charlie" "alice"))))
+    (testing "charlie sees alice's timeline"
+      (is (= []
+             (feed-rec state "charlie")))
+      (let [result (feed-rec state-a "charlie")]
+        (are [x y] (= x y)
+             "alice" (get-in result [0 :author])
+             "a message" (get-in result [0 :message]))
+        (is (t/within? (t/interval time-now (t/plus time-now (t/seconds 1)))
+                       (get-in result [0 :timestamp])))))
+    (testing "charlie can subscribe to alice and bob's timeline"
+      (is (= (assoc-in state ["charlie" :subscriptions] #{"alice" "bob"})
+             (-> state
+                 (subscribe-rec "charlie" "alice")
+                 (subscribe-rec "charlie" "bob"))))
+      (is (= [{:author "alice" :message "a message" :timestamp time-now}
+              {:author "bob" :message "bob's msg2" :timestamp feb-1-2015}
+              {:author "bob" :message "bob's msg1" :timestamp jan-1-2015}]
+             (feed-rec state-b "charlie"))))))
 
 (deftest extract-mentions-test
   "test mentions are parsed from message"
