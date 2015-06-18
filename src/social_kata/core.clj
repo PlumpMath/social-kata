@@ -23,6 +23,7 @@
    subscriptions :- clojure.lang.APersistentSet])
 
 (defn ^:always-validate new-user
+  "Constructor to create a User record"
   ([username]
    (->User username [] #{} #{}))
   ([username
@@ -39,17 +40,22 @@
    (->User username (vector timeline)  (set mentions) (set subscriptions))))
 
 (defn map->new-user
+  "Constructor for a new User from a map. Takes a map of username, a timeline, an optional set of mentions and an optional set of subscriptions"
   [{:keys [username timeline mentions subscriptions] :or {mentions #{} subscriptions #{}}}]
-  (->User username (vector timeline)  (set mentions) (set subscriptions)))
+  (->User username (into [] timeline)  (into #{} mentions) (into #{} subscriptions)))
 
 (defn new-world [user-col]
+  "Constructor for a 'world' of social media! Takes a collection of users."
   (reduce #(assoc %1 (:username %2) %2) {} user-col))
 
 (defn extract-mentions
+  "Extract the username of any user mentioned in message text.
+  Uses '@' to indicate a user."
   [message]
   (into #{} (map second (re-seq #"@(\w*)" message))))
 
 (defn publish
+  "Publish a message to the specified users timeline."
   [state user msg]
   (s/validate state-of-world-schema state)
   (update-in state [user] conj
