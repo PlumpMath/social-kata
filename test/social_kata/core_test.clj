@@ -155,6 +155,19 @@
            (-> (publish state "Alice" message)
                (get-in ["Alice" :mentions]))))))
 
+(deftest mentions-in-message-rec-test
+  "test mentions in message"
+  (let [message "this message mentions @chris, @agile_geek, @thomas and @jr0cket"
+        time-now (t/now)
+        state {"Alice"
+               (new-user "Alice" (map->TimelineEntry
+                                  {:message "message"
+                                   :author "Alice"
+                                   :timestamp time-now}))}]
+    (is (= #{"chris" "agile_geek" "thomas" "jr0cket"}
+           (-> (publish-rec state "Alice" message)
+               (get-in ["Alice" :mentions]))))))
+
 (deftest view-timeline-including-follows-test
   "View a users timeline including the timelines they follow"
   (let [time-now (t/now)
