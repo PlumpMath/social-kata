@@ -17,10 +17,10 @@
      timestamp :- org.joda.time.DateTime])
 
 (s/defrecord User
-  [username :- s/Str
-   timeline :- [TimelineEntry]
-   mentions :- clojure.lang.APersistentSet
-   subscriptions :- clojure.lang.APersistentSet])
+    [username :- s/Str
+     timeline :- [TimelineEntry]
+     mentions :- clojure.lang.APersistentSet
+     subscriptions :- clojure.lang.APersistentSet])
 
 (defn ^:always-validate new-user
   "Constructor to create a User record"
@@ -37,12 +37,14 @@
     timeline
     mentions
     subscriptions]
-   (->User username (vector timeline)  (set mentions) (set subscriptions))))
+   (let [tl (if (sequential? timeline) timeline (vector timeline))]
+     (->User username tl  (set mentions) (set subscriptions)))))
 
-(defn map->new-user
+(defn ^:always-validate map->new-user
   "Constructor for a new User from a map. Takes a map of username, a timeline, an optional set of mentions and an optional set of subscriptions"
   [{:keys [username timeline mentions subscriptions] :or {mentions #{} subscriptions #{}}}]
-  (->User username (into [] timeline)  (into #{} mentions) (into #{} subscriptions)))
+  (let [tl (if (sequential? timeline) timeline (vector timeline))]
+    (->User username tl  (into #{} mentions) (into #{} subscriptions))))
 
 (defn new-world [user-col]
   "Constructor for a 'world' of social media! Takes a collection of users."
@@ -65,7 +67,7 @@
 (defn- update-user
   [user username msg]
   (let [mentions (extract-mentions msg)]
-   (if (nil? user)
+    (if (nil? user)
       (new-user username (->TimelineEntry msg username (t/now)) mentions)
       (->
        (update-in user [:timeline] #(conj % (->TimelineEntry msg username (t/now))))
@@ -87,11 +89,11 @@
    (get-in state [user :timeline] [])
    (sort-by :timestamp t/after?)))
 
-(s/defn view-rec :- [TimelineEntry]
+(s/defn ^:always-validate view-rec
   [state :- {s/Str User}
    user  :- s/Str]
   (->>
-   (get-in state [user :timeline] [])
+   (get-in state [user :timeline])
    (sort-by :timestamp t/after?)))
 
 (defn subscribe
@@ -115,14 +117,15 @@
                     {:keys [message author timestamp]} (view state subscribee)]
                 {:author author :message message :timestamp timestamp})))))
 
-(defn feed-rec
+(defn ^:always-validate feed-rec
   [state username]
-  (let [subs (get-in state [username :subscriptions])]
+  (if-let [subs (get-in state [username :subscriptions])]
     (vec
      (sort-by :timestamp t/after?
               (for [subscribee subs
                     timeline (view-rec state subscribee)]
-                timeline)))))
+                timeline)))
+    []))
 
 (defn view-all
   "View all of a users timeline including all follows (timelines subscribed to)"
@@ -134,7 +137,7 @@
    (sort-by :timestamp t/after?)
    vec))
 
-(defn view-all-rec
+(defn ^:always-validate view-all-rec
   "View all of a users timeline including all follows (timelines subscribed to)"
   [state user]
   (->>

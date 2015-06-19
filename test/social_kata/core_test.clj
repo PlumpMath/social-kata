@@ -99,21 +99,46 @@
   (let [state
         (new-world [(new-user "charlie")])
         time-now (t/now)
-        state-a {"charlie" {:timeline [] :subscriptions #{"alice"}}
-                 "alice" {:timeline [{:author "alice" :message "a message" :timestamp time-now}] :subscriptions #{}}}
+        state-a {"charlie"
+                 (map->new-user
+                  {:username "charlie"
+                   :timeline []
+                   :subscriptions #{"alice"}})
+                 "alice"
+                 (map->new-user
+                  {:username "alice"
+                   :timeline [(map->TimelineEntry
+                               {:author "alice"
+                                :message "a message"
+                                :timestamp time-now})]
+                   :subscriptions #{}})}
         jan-1-2015 (t/date-time 2015 01 01)
         feb-1-2015 (t/date-time 2015 02 01)
-        state-b {"charlie" {:timeline [] :subscriptions #{"alice" "bob"}}
-                 "alice" {:timeline [{:author "alice"
-                                      :message "a message"
-                                      :timestamp time-now}] :subscriptions #{}}
-                 "bob" {:timeline [{:message "bob's msg2"
-                                    :author "bob"
-                                    :timestamp feb-1-2015}
-                                   {:message "bob's msg1"
-                                    :author "bob"
-                                    :timestamp jan-1-2015}
-                                   ]}}]
+        state-b {"charlie"
+                 (map->new-user
+                  {:username "charlie"
+                   :timeline []
+                   :subscriptions #{"alice" "bob"}})
+                 "alice"
+                 (map->new-user
+                  {:username "alice"
+                   :timeline [(map->TimelineEntry
+                               {:author "alice"
+                                :message "a message"
+                                :timestamp time-now})]})
+                 "bob"
+                 (map->new-user
+                  {:username "bob"
+                   :timeline [
+                              (map->TimelineEntry
+                               {:message "bob's msg2"
+                                :author "bob"
+                                :timestamp feb-1-2015})
+                              (map->TimelineEntry
+                               {:message "bob's msg1"
+                                :author "bob"
+                                :timestamp jan-1-2015})
+                              ]})}]
     (testing "charlie can subscribe to alice's timeline"
       (is (= (update-in state ["charlie" :subscriptions] conj "alice")
              (subscribe-rec state "charlie" "alice"))))
@@ -131,9 +156,12 @@
              (-> state
                  (subscribe-rec "charlie" "alice")
                  (subscribe-rec "charlie" "bob"))))
-      (is (= [{:author "alice" :message "a message" :timestamp time-now}
-              {:author "bob" :message "bob's msg2" :timestamp feb-1-2015}
-              {:author "bob" :message "bob's msg1" :timestamp jan-1-2015}]
+      (is (= [(map->TimelineEntry
+               {:author "alice" :message "a message" :timestamp time-now})
+              (map->TimelineEntry
+               {:author "bob" :message "bob's msg2" :timestamp feb-1-2015})
+              (map->TimelineEntry
+               {:author "bob" :message "bob's msg1" :timestamp jan-1-2015})]
              (feed-rec state-b "charlie"))))))
 
 (deftest extract-mentions-test
@@ -192,13 +220,13 @@
                "Charlie"
                {:timeline [{:author "Charlie" :message "Hello from the Clojure Dojo" :timestamp jan-31-2015}]}}]
     (is (=
-           [{:author "Alice" :message "Hello from Alice" :timestamp time-now}
-            {:author "Bob" :message "This is Bob's second post" :timestamp feb-5-2015}
-            {:author "Alice" :message "Another message from Alice" :timestamp feb-1-2015}
-            {:author "Charlie" :message "Hello from the Clojure Dojo" :timestamp jan-31-2015}
-            {:author "Bob" :message "This is Bob's first post" :timestamp jan-10-2015}
-            {:author "Alice" :message "I am drinking coffee." :timestamp jan-1-2015}]
-           (view-all state "Alice")))))
+         [{:author "Alice" :message "Hello from Alice" :timestamp time-now}
+          {:author "Bob" :message "This is Bob's second post" :timestamp feb-5-2015}
+          {:author "Alice" :message "Another message from Alice" :timestamp feb-1-2015}
+          {:author "Charlie" :message "Hello from the Clojure Dojo" :timestamp jan-31-2015}
+          {:author "Bob" :message "This is Bob's first post" :timestamp jan-10-2015}
+          {:author "Alice" :message "I am drinking coffee." :timestamp jan-1-2015}]
+         (view-all state "Alice")))))
 
 (deftest view-timeline-including-follows-rec-test
   "View a users timeline including the timelines they follow"
@@ -235,4 +263,4 @@
           (map->TimelineEntry {:author "Charlie" :message "Hello from the Clojure Dojo" :timestamp jan-31-2015})
           (map->TimelineEntry {:author "Bob" :message "This is Bob's first post" :timestamp jan-10-2015})
           (map->TimelineEntry {:author "Alice" :message "I am drinking coffee." :timestamp jan-1-2015})]
-           (view-all-rec state "Alice")))))
+         (view-all-rec state "Alice")))))
