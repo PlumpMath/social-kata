@@ -121,8 +121,8 @@
     (vec
      (sort-by :timestamp t/after?
               (for [subscribee subs
-                    {:keys [message author timestamp]} (view state subscribee)]
-                {:author author :message message :timestamp timestamp})))))
+                    timeline (view-rec state subscribee)]
+                timeline)))))
 
 (defn view-all
   "View all of a users timeline including all follows (timelines subscribed to)"
@@ -134,24 +134,11 @@
    (sort-by :timestamp t/after?)
    vec))
 
-
-(comment
-  (new-user "Chris" [(->TimelineEntry "message" "Chris" (t/now))])
-
-  (new-user {:username "Chris" :timeline [(->TimelineEntry "Chris" "message" (t/now))] :subscriptions #{"Fred"}})
-  (defn my-range [x y] (loop [acc [x] n x]
-                         (let [n (inc n)]
-                           (if (= n y)
-                             acc
-                             (recur (conj acc n) n)))))
-
-  (def world1 (new-world [(new-user "Chris"
-                                  (->TimelineEntry "message" "Chris" (t/now))
-                                  ["Fred" "Jim" "Fred"])
-                        (new-user "Fred"
-                                  (->TimelineEntry "message from Fred" "Fred" (t/now)))]))
-  world1
-  (publish-rec (new-world []) "Chris" "Hello from Starbucks")
-
-
-  )
+(defn view-all-rec
+  "View all of a users timeline including all follows (timelines subscribed to)"
+  [state user]
+  (->>
+   (into (view-rec state user)
+         (feed-rec state user))
+   (sort-by :timestamp t/after?)
+   vec))

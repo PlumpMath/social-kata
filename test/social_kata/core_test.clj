@@ -18,8 +18,12 @@
       (is (= username (get-in state [username :username])))
       (is (= username (get-in state [username :timeline 0 :author])))
       (is (= msg (get-in state [username :timeline 0 :message])))
-      (is (t/within? (t/interval time-before (t/now))
-                     (get-in state [username :timeline 0 :timestamp]))))))
+      (let [timestamp
+            (get-in state [username :timeline 0 :timestamp])]
+        (is (t/within? (t/interval time-before
+                                   (t/plus time-before (t/seconds 1)))
+                       timestamp)
+            (format ":timestamp %s is not within a second of %s" timestamp time-before))))))
 
 (deftest reading-test
   (testing "bob can view alice's timeline"
@@ -195,3 +199,40 @@
             {:author "Bob" :message "This is Bob's first post" :timestamp jan-10-2015}
             {:author "Alice" :message "I am drinking coffee." :timestamp jan-1-2015}]
            (view-all state "Alice")))))
+
+(deftest view-timeline-including-follows-rec-test
+  "View a users timeline including the timelines they follow"
+  (let [time-now (t/now)
+        jan-1-2015  (t/date-time 2015 01 01)
+        jan-10-2015 (t/date-time 2015 01 10)
+        feb-1-2015  (t/date-time 2015 02 01)
+        feb-5-2015  (t/date-time 2015 02 05)
+        jan-31-2015 (t/date-time 2015 01 31)
+        state (new-world
+               [(map->new-user
+                 {:username "Alice"
+                  :timeline [(map->TimelineEntry
+                              {:author "Alice" :message "Hello from Alice" :timestamp time-now})
+                             (map->TimelineEntry
+                              {:author "Alice" :message "Another message from Alice" :timestamp feb-1-2015})
+                             (map->TimelineEntry
+                              {:author "Alice" :message "I am drinking coffee." :timestamp jan-1-2015})]
+                  :subscriptions #{"Bob" "Charlie"}})
+                (map->new-user
+                 {:username "Bob"
+                  :timeline [(map->TimelineEntry
+                              {:author "Bob" :message "This is Bob's second post" :timestamp feb-5-2015})
+                             (map->TimelineEntry
+                              {:author "Bob" :message "This is Bob's first post" :timestamp jan-10-2015})]})
+                (map->new-user
+                 {:username "Charlie"
+                  :timeline [(map->TimelineEntry
+                              {:author "Charlie" :message "Hello from the Clojure Dojo" :timestamp jan-31-2015})]})])]
+    (is (=
+         [(map->TimelineEntry {:author "Alice" :message "Hello from Alice" :timestamp time-now})
+          (map->TimelineEntry {:author "Bob" :message "This is Bob's second post" :timestamp feb-5-2015})
+          (map->TimelineEntry {:author "Alice" :message "Another message from Alice" :timestamp feb-1-2015})
+          (map->TimelineEntry {:author "Charlie" :message "Hello from the Clojure Dojo" :timestamp jan-31-2015})
+          (map->TimelineEntry {:author "Bob" :message "This is Bob's first post" :timestamp jan-10-2015})
+          (map->TimelineEntry {:author "Alice" :message "I am drinking coffee." :timestamp jan-1-2015})]
+           (view-all-rec state "Alice")))))
