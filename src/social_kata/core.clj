@@ -44,7 +44,7 @@
   "Constructor for a new User from a map. Takes a map of username, a timeline, an optional set of mentions and an optional set of subscriptions"
   [{:keys [username timeline mentions subscriptions] :or {mentions #{} subscriptions #{}}}]
   (let [tl (if (sequential? timeline) timeline (vector timeline))]
-    (->User username tl  (into #{} mentions) (into #{} subscriptions))))
+    (->User username tl  (set mentions) (set subscriptions))))
 
 (defn new-world [user-col]
   "Constructor for a 'world' of social media! Takes a collection of users."
@@ -54,15 +54,20 @@
   "Extract the username of any user mentioned in message text.
   Uses '@' to indicate a user."
   [message]
-  (into #{} (map second (re-seq #"@(\w*)" message))))
+  (set (map second (re-seq #"@(\w*)" message))))
+
+(extract-mentions "mentions for @agile_geek @jr0cket @otfrom")
 
 (defn publish
   "Publish a message to the specified users timeline."
   [state user msg]
   (s/validate state-of-world-schema state)
-  (update-in state [user] conj
-             {:mentions (extract-mentions msg)
-              :message  msg}))
+  (update-in
+   (update-in state [user :timeline]
+              #(vec
+                (conj %
+                      {:message msg :author user :timestamp (t/now)})))
+   [user :mentions] #(into (extract-mentions msg) %)))
 
 (defn- update-user
   [user username msg]
@@ -71,8 +76,7 @@
       (new-user username (->TimelineEntry msg username (t/now)) mentions)
       (->
        (update-in user [:timeline] #(conj % (->TimelineEntry msg username (t/now))))
-       (update-in [:mentions] into mentions)
-       ))))
+       (update-in [:mentions] into mentions)))))
 
 (s/defn ^:always-validate publish-rec :- {s/Str User}
   [state :- {s/Str User}

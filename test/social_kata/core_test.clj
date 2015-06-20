@@ -5,8 +5,23 @@
 
 (deftest publish-test
   (testing "Alice can publish to a personal timeline"
-    (is (= {"alice" [{:message "hello world." :mentions #{}}]}
-           (publish {} "alice" "hello world.")))))
+    (let [username "alice"
+          msg "hello world."
+          result (publish {} username msg)
+          time-before (t/now)]
+      (is (= username (first (keys result))))
+      (is (= 1 (count (get-in result
+                              [username :timeline]))))
+      (is (= username
+             (get-in result
+                     [username :timeline 0 :author])))
+      (is (= msg
+             (get-in result
+                     [username :timeline 0 :message])))
+      (is (t/within?
+           time-before
+           time-before
+           (get-in result [username :timeline 0 :timestamp]))))))
 
 (deftest publish-rec-test
   (testing "Alice can publish to a personal timeline"
