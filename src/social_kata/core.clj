@@ -1,7 +1,9 @@
 (ns social-kata.core
-  (:require [schema.core :as s]
-            [clj-time.core :as t])
-  (:import [org.joda.time DateTime]))
+  (:require [clj-time
+             [core :as t]
+             [format :as tf]]
+            [schema.core :as s])
+  (:import [org.joda.time.DateTime]))
 
 (def state-of-world-schema
   {s/Str

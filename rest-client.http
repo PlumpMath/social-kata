@@ -1,0 +1,13 @@
+# -*- restclient -*-
+#
+# Send rest requests to server
+#
+
+GET http://localhost:3000/
+Accept-Encoding: application/json
+
+#
+# Get timeline
+#
+GET http://localhost:3000/api/timeline/Chris
+Accept-Encoding: application/json

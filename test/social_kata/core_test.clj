@@ -279,3 +279,15 @@
           (map->TimelineEntry {:author "Bob" :message "This is Bob's first post" :timestamp jan-10-2015})
           (map->TimelineEntry {:author "Alice" :message "I am drinking coffee." :timestamp jan-1-2015})]
          (view-all-rec state "Alice")))))
+
+
+
+(def a-world (new-world [(map->new-user {
+                              :username "Chris"
+                              :timeline [(map->TimelineEntry
+                                          {:author "Chris"
+                                           :message "a message"
+                                           :timestamp (t/now)})]})]))
+
+
+(view-rec a-world "Chris")
