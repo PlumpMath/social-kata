@@ -9,5 +9,21 @@ Accept-Encoding: application/json
 #
 # Get timeline
 #
-GET http://localhost:3000/api/timeline/Chris
+GET http://localhost:3000/api/Chris/timeline
 Accept-Encoding: application/json
+
+#
+# Post a new subscriber to Chris
+#
+POST http://localhost:3000/api/Chris/subscribe
+Content-Type: application/json
+
+{ "subs" : ["Alice","Bill","Jim"] }
+
+#
+# Post a new message to Chris
+#
+POST http://localhost:3000/api/Chris/publish
+Content-Type: application/json
+
+{ "message" : "and another new message!" }

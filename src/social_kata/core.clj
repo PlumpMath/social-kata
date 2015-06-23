@@ -151,3 +151,8 @@
          (feed-rec state user))
    (sort-by :timestamp t/after?)
    vec))
+
+(defn ^:always-validate show-subscriptions
+  "Show all the users this user subscribes to"
+  [state user]
+  (get-in state [user :subscriptions]))

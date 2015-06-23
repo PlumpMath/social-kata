@@ -280,14 +280,13 @@
           (map->TimelineEntry {:author "Alice" :message "I am drinking coffee." :timestamp jan-1-2015})]
          (view-all-rec state "Alice")))))
 
-
-
-(def a-world (new-world [(map->new-user {
-                              :username "Chris"
-                              :timeline [(map->TimelineEntry
-                                          {:author "Chris"
-                                           :message "a message"
-                                           :timestamp (t/now)})]})]))
-
-
-(view-rec a-world "Chris")
+(deftest test-show-subscriptions
+  (testing "Return the users a user follows"
+    (let [state (new-world
+                 [(map->new-user
+                   {:username "Chris"
+                    :timeline []
+                    :mentions #{}
+                    :subscriptions #{"Fred" "Anne"}})])]
+      (is (= #{"Fred" "Anne"}
+             (show-subscriptions state "Chris"))))))

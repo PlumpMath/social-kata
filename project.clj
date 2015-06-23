@@ -9,7 +9,9 @@
                  [compojure "1.3.4"]
                  [ring-middleware-format "0.5.0"]
                  [ring/ring-json "0.3.1"]
-                 [ring/ring-defaults "0.1.5"]]
+                 [ring/ring-defaults "0.1.5"]
+                 [log4j "1.2.17"]
+                 [org.clojure/tools.logging "0.3.1"]]
   :plugins [[lein-ring "0.8.13"]
             [ring/ring-json "0.3.1"]]
   :ring {:handler social-kata.handler/app}
