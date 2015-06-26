@@ -26,4 +26,4 @@ Content-Type: application/json
 POST http://localhost:3000/api/Chris/publish
 Content-Type: application/json
 
-{ "message" : "and another new message!" }
+{ "message" : "Morning dude!" }

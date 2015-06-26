@@ -6,6 +6,7 @@
   (:import [org.joda.time.DateTime]))
 
 (def state-of-world-schema
+  "Schema for social network state."
   {s/Str
    {:timeline [{:message s/Str
                 :author s/Str
@@ -48,8 +49,9 @@
   (let [tl (if (sequential? timeline) timeline (vector timeline))]
     (->User username tl  (set mentions) (set subscriptions))))
 
-(defn new-world [user-col]
+(defn new-world
   "Constructor for a 'world' of social media! Takes a collection of users."
+  [user-col]
   (reduce #(assoc %1 (:username %2) %2) {} user-col))
 
 (defn extract-mentions
@@ -57,8 +59,6 @@
   Uses '@' to indicate a user."
   [message]
   (set (map second (re-seq #"@(\w*)" message))))
-
-(extract-mentions "mentions for @agile_geek @jr0cket @otfrom")
 
 (defn publish
   "Publish a message to the specified users timeline."
@@ -89,6 +89,7 @@
                  #(update-user % user msg))))
 
 (defn view
+  "Show the timeline of the specified user."
   [state user]
   (s/validate state-of-world-schema state)
   (->>
@@ -103,6 +104,7 @@
    (sort-by :timestamp t/after?)))
 
 (defn subscribe
+  "Subscribe to a users timeline."
   [state user subscription]
   (s/validate state-of-world-schema state)
   (update-in state [user :subscriptions] conj subscription))
@@ -114,6 +116,7 @@
   (update-in state [username :subscriptions] conj subscription))
 
 (defn feed
+  "Show the timeline for a specific users subscriptions."
   [state user]
   (s/validate state-of-world-schema state)
   (let [subs (get-in state [user :subscriptions])]
@@ -124,6 +127,7 @@
                 {:author author :message message :timestamp timestamp})))))
 
 (defn ^:always-validate feed-rec
+  "Show the timeline for a specific users subscriptions."
   [state username]
   (if-let [subs (get-in state [username :subscriptions])]
     (vec
